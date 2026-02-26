@@ -26,12 +26,14 @@ class Dataset_Teacher(Dataset):
         seed: int,
         sigma: float,
         spin_type: str = "continuous",        # "vector" or "continuous" 
+        label_type: str = "continuous",
     ):
         self.P = P
         self.N = N
         self.d = d
         self.sigma = sigma
         self.spin_type = spin_type
+        self.label_type = spin_type
         torch.manual_seed(seed)
         # Isotropic: Gaussian then normalized to fixed Frobenius norm.
         self.T = torch.randn(N, d, d)  #[N,d,d]
@@ -53,10 +55,10 @@ class Dataset_Teacher(Dataset):
         h = torch.einsum("iab,pib->pa", self.Teacher, xi)
 
         # enforce same nature as a single spin of xi
-        if self.spin_type == "vector":
+        if self.label_type == "vector":
             # for d=1: this becomes sign(h) (up to numerical eps)
             y = self.normalize(h)
-        elif self.spin_type == "continuous":
+        elif self.label_type == "continuous":
             y = h
         else:
             raise ValueError("spin_type must be 'vector' or 'continuous'")

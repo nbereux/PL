@@ -34,14 +34,13 @@ METRIC_NAMES = [
     "diff_hebb",
 ]
 
-def initialize(N=1000, P=400, d=1, lr=0.1, spin_type="vector",  device='cuda', gamma=0., init_Hebb=True, downf=1., seed=444):
+def initialize(N=1000, P=400, d=1, lr=0.1, spin_type="vector", label_type="vector",  device='cuda', gamma=0., init_Hebb=True, downf=1., seed=444):
     # Initialize the dataset
-    dataset = Dataset_Teacher(P, N, d, seed=seed, sigma=0.5, spin_type=spin_type)
+    dataset = Dataset_Teacher(P, N, d, seed=seed, sigma=0.5, spin_type=spin_type, label_type=label_type)
 
     # Initialize the model
     model = Classifier(N, d, gamma=gamma, spin_type=spin_type, downf=downf)
-    model.to(device)  # Move the model to the specified device
-        # create optimizer (vanilla SGD; full-batch equivalence if dataloader is full batch)
+    model.to(device)  
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 
     # Apply the Hebb rule
@@ -125,14 +124,7 @@ def train_model(model, fixed_norm, dataset, dataloader, epochs,
                 train_acc += accuracy.item()
             train_acc = train_acc / max(counter_acc, 1)
 
-            #print("U norm/d", torch.norm(torch.einsum("jab,mjb->ma", model.J, xi),dim=-1).mean().item()/xi.shape[-1])
-
             R = (torch.einsum("iab,iab->", dataset.T.to(device), model.J) / (dataset.T.to(device).norm() * model.J.norm())).cpu().item()
-
-            # print("xi", torch.norm(xi, dim=-1))
-            # print("y", torch.norm(y))
-            # print("J", torch.norm(model.J))
-            # print("u", torch.norm(torch.einsum("jab,mjb->ma", model.J, xi),dim=-1))
 
             # Compute model parameters for logging
             J = model.J.squeeze().cpu().detach().numpy()
